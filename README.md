@@ -374,8 +374,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Kush Modi** | **Certificate Authentication System**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Kush--Modi-black?style=for-the-badge&logo=github)](https://github.com/Kush-Modi)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/your-profile)
-[![Email](https://img.shields.io/badge/Email-Contact-red?style=for-the-badge&logo=gmail)](mailto:your-email@example.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/kush-modi-647b73372/)
+[![Email](https://img.shields.io/badge/Email-Contact-red?style=for-the-badge&logo=gmail)](mailto:kushmodi.0505@gmail.com)
 
 </div>
 
