@@ -1,0 +1,162 @@
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const cryptoService = require('../services/cryptoService');
+const stegoService = require('../services/stegoService');
+const blockchainService = require('../services/blockchainService');
+const { generateHash } = require('../utils/hash');
+
+const router = express.Router();
+
+// Configure multer for certificate uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/certificates/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'cert-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.'));
+    }
+  }
+});
+
+// Issue certificate endpoint
+router.post('/certificate', upload.single('certificate'), async (req, res) => {
+  try {
+    const { issuerId, issuerName, recipientName, certificateType } = req.body;
+    const certificateFile = req.file;
+
+    if (!certificateFile) {
+      return res.status(400).json({ 
+        error: 'No certificate file provided' 
+      });
+    }
+
+    if (!issuerId || !issuerName || !recipientName || !certificateType) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: issuerId, issuerName, recipientName, certificateType' 
+      });
+    }
+
+    // Step 1: Generate hash of the certificate
+    const certificateHash = await generateHash(certificateFile.path);
+    console.log('📋 Certificate hash generated:', certificateHash);
+
+    // Step 2: Create digital signature
+    const signature = await cryptoService.signData(certificateHash, issuerId);
+    console.log('🔐 Digital signature created');
+
+    // Step 3: Store hash on blockchain
+    const blockchainResult = await blockchainService.storeHash(certificateHash, issuerId);
+    console.log('⛓️ Hash stored on blockchain:', blockchainResult.transactionHash);
+
+    // Step 4: Embed data via steganography
+    const embeddedFilePath = await stegoService.embedData(
+      certificateFile.path,
+      {
+        transactionHash: blockchainResult.transactionHash,
+        signature: signature,
+        issuerId: issuerId,
+        timestamp: new Date().toISOString()
+      }
+    );
+    console.log('🕵️ Data embedded via steganography');
+
+    // Step 5: Generate QR code (optional)
+    const qrCodeData = {
+      transactionHash: blockchainResult.transactionHash,
+      certificateHash: certificateHash,
+      issuerId: issuerId,
+      verificationUrl: `${req.protocol}://${req.get('host')}/api/verify/${certificateHash}`
+    };
+
+    res.json({
+      success: true,
+      message: 'Certificate issued successfully',
+      data: {
+        certificateHash,
+        transactionHash: blockchainResult.transactionHash,
+        signature,
+        issuerId,
+        recipientName,
+        certificateType,
+        issuedAt: new Date().toISOString(),
+        verificationUrl: qrCodeData.verificationUrl,
+        qrCodeData
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error issuing certificate:', error);
+    res.status(500).json({ 
+      error: 'Failed to issue certificate',
+      message: error.message 
+    });
+  }
+});
+
+// Get issuer public key endpoint
+router.get('/issuer/:issuerId/public-key', async (req, res) => {
+  try {
+    const { issuerId } = req.params;
+    const publicKey = await cryptoService.getPublicKey(issuerId);
+    
+    res.json({
+      success: true,
+      issuerId,
+      publicKey
+    });
+  } catch (error) {
+    console.error('❌ Error getting public key:', error);
+    res.status(500).json({ 
+      error: 'Failed to get public key',
+      message: error.message 
+    });
+  }
+});
+
+// Generate new issuer key pair endpoint
+router.post('/issuer/generate-keys', async (req, res) => {
+  try {
+    const { issuerId, issuerName } = req.body;
+    
+    if (!issuerId || !issuerName) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: issuerId, issuerName' 
+      });
+    }
+
+    const keyPair = await cryptoService.generateKeyPair(issuerId, issuerName);
+    
+    res.json({
+      success: true,
+      message: 'Key pair generated successfully',
+      issuerId,
+      publicKey: keyPair.publicKey,
+      // Note: Private key should be stored securely and not returned
+      keyGeneratedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Error generating key pair:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate key pair',
+      message: error.message 
+    });
+  }
+});
+
+module.exports = router;

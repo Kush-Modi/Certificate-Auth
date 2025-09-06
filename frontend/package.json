@@ -1,0 +1,80 @@
+{
+  "name": "certificate-auth-frontend",
+  "version": "1.0.0",
+  "description": "Frontend application for Hybrid Certificate Authentication & Verification System",
+  "private": true,
+  "dependencies": {
+    "@mui/material": "^5.14.18",
+    "@mui/icons-material": "^5.14.18",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.18.0",
+    "react-scripts": "5.0.1",
+    "qrcode": "^1.5.3",
+    "qrcode-reader": "^1.0.4",
+    "html5-qrcode": "^2.3.8",
+    "axios": "^1.6.0",
+    "react-dropzone": "^14.2.3",
+    "react-to-print": "^2.14.15",
+    "react-qr-scanner": "^1.0.0-alpha.11"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "eslint": "^8.54.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.1.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .js,.jsx",
+    "lint:fix": "eslint src --ext .js,.jsx --fix",
+    "format": "prettier --write src/**/*.{js,jsx,css,md}"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:5000",
+  "keywords": [
+    "react",
+    "blockchain",
+    "cryptography",
+    "steganography",
+    "certificate",
+    "verification",
+    "authentication",
+    "security"
+  ],
+  "author": "Kush Modi <kushmodi.0505@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kush-Modi/Certificate-Auth.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kush-Modi/Certificate-Auth/issues"
+  },
+  "homepage": "https://github.com/Kush-Modi/Certificate-Auth#readme"
+}
