@@ -1,38 +1,28 @@
 const { ethers } = require('ethers');
 
+// Load env
+require('dotenv').config();
+
 // Blockchain configuration
 const BLOCKCHAIN_CONFIG = {
-  // Polygon Mumbai Testnet
+  // Polygon Mumbai Testnet (preferred)
   polygon: {
-    rpcUrl: 'https://rpc-mumbai.maticvigil.com',
+    rpcUrl: process.env.MUMBAI_RPC_URL || 'https://polygon-mumbai.infura.io/v3/YOUR_INFURA_KEY',
     chainId: 80001,
     name: 'Polygon Mumbai'
   },
-  
-  // Ethereum Sepolia Testnet
+  // Ethereum Sepolia Testnet (optional)
   ethereum: {
-    rpcUrl: 'https://sepolia.infura.io/v3/YOUR_INFURA_KEY',
+    rpcUrl: process.env.SEPOLIA_RPC_URL || 'https://sepolia.infura.io/v3/YOUR_INFURA_KEY',
     chainId: 11155111,
     name: 'Ethereum Sepolia'
   }
 };
 
-// Smart contract configuration
-const CONTRACT_CONFIG = {
-  // Certificate Registry Contract (placeholder)
-  address: '0x0000000000000000000000000000000000000000', // Replace with actual contract address
-  abi: [
-    // Add contract ABI here
-    'function storeHash(bytes32 hash, string memory issuerId) public',
-    'function verifyHash(bytes32 hash) public view returns (bool)',
-    'function getIssuer(bytes32 hash) public view returns (string memory)'
-  ]
-};
-
 // Wallet configuration
 const WALLET_CONFIG = {
-  privateKey: process.env.PRIVATE_KEY || '', // Store in environment variables
-  mnemonic: process.env.MNEMONIC || '' // Store in environment variables
+  privateKey: process.env.PRIVATE_KEY || '', // NEVER hardcode; set via env
+  mnemonic: process.env.MNEMONIC || ''
 };
 
 class BlockchainService {
@@ -41,30 +31,22 @@ class BlockchainService {
     this.config = BLOCKCHAIN_CONFIG[network];
     this.provider = null;
     this.wallet = null;
-    this.contract = null;
   }
 
   async initialize() {
     try {
       // Initialize provider
       this.provider = new ethers.JsonRpcProvider(this.config.rpcUrl);
-      
-      // Initialize wallet
+
+      // Initialize wallet if provided
       if (WALLET_CONFIG.privateKey) {
         this.wallet = new ethers.Wallet(WALLET_CONFIG.privateKey, this.provider);
       } else if (WALLET_CONFIG.mnemonic) {
-        this.wallet = ethers.Wallet.fromMnemonic(WALLET_CONFIG.mnemonic).connect(this.provider);
+        this.wallet = ethers.Wallet.fromPhrase(WALLET_CONFIG.mnemonic).connect(this.provider);
+      } else {
+        console.warn('⚠️ No PRIVATE_KEY or MNEMONIC set. Read-only blockchain operations only.');
       }
-      
-      // Initialize contract
-      if (this.wallet && CONTRACT_CONFIG.address !== '0x0000000000000000000000000000000000000000') {
-        this.contract = new ethers.Contract(
-          CONTRACT_CONFIG.address,
-          CONTRACT_CONFIG.abi,
-          this.wallet
-        );
-      }
-      
+
       console.log(`✅ Blockchain service initialized for ${this.config.name}`);
       return true;
     } catch (error) {
@@ -75,11 +57,11 @@ class BlockchainService {
 
   async getNetworkInfo() {
     if (!this.provider) return null;
-    
+
     try {
       const network = await this.provider.getNetwork();
       const blockNumber = await this.provider.getBlockNumber();
-      
+
       return {
         name: network.name,
         chainId: network.chainId.toString(),
@@ -96,6 +78,5 @@ class BlockchainService {
 module.exports = {
   BlockchainService,
   BLOCKCHAIN_CONFIG,
-  CONTRACT_CONFIG,
   WALLET_CONFIG
 };

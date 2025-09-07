@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const cryptoService = require('../services/cryptoService');
 const stegoService = require('../services/stegoService');
 const blockchainService = require('../services/blockchainService');
@@ -8,10 +9,14 @@ const { generateHash } = require('../utils/hash');
 
 const router = express.Router();
 
+// Ensure upload directories exist
+const uploadBase = path.join(__dirname, '..', 'uploads', 'certificates');
+fs.mkdirSync(uploadBase, { recursive: true });
+
 // Configure multer for certificate uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/certificates/');
+    cb(null, uploadBase);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -64,16 +69,22 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
     const blockchainResult = await blockchainService.storeHash(certificateHash, issuerId);
     console.log('⛓️ Hash stored on blockchain:', blockchainResult.transactionHash);
 
-    // Step 4: Embed data via steganography
-    const embeddedFilePath = await stegoService.embedData(
-      certificateFile.path,
-      {
-        transactionHash: blockchainResult.transactionHash,
-        signature: signature,
-        issuerId: issuerId,
-        timestamp: new Date().toISOString()
-      }
-    );
+    // Step 4: Embed data via steganography (PNG/JPEG) or placeholder for PDF
+    const payload = {
+      transactionHash: blockchainResult.transactionHash,
+      signature: signature,
+      certificateHash,
+      issuerId: issuerId,
+      timestamp: new Date().toISOString()
+    };
+
+    const isPdf = certificateFile.mimetype === 'application/pdf' || path.extname(certificateFile.originalname).toLowerCase() === '.pdf';
+    let embeddedFilePath;
+    if (isPdf) {
+      embeddedFilePath = await stegoService.embedDataInPDF(certificateFile.path, payload);
+    } else {
+      embeddedFilePath = await stegoService.embedData(certificateFile.path, payload);
+    }
     console.log('🕵️ Data embedded via steganography');
 
     // Step 5: Generate QR code (optional)
@@ -96,7 +107,8 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
         certificateType,
         issuedAt: new Date().toISOString(),
         verificationUrl: qrCodeData.verificationUrl,
-        qrCodeData
+        qrCodeData,
+        embeddedFilePath
       }
     });
 

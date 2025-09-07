@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const cryptoService = require('../services/cryptoService');
 const stegoService = require('../services/stegoService');
 const blockchainService = require('../services/blockchainService');
@@ -9,9 +10,12 @@ const { generateHash } = require('../utils/hash');
 const router = express.Router();
 
 // Configure multer for certificate verification uploads
+const verifyBase = path.join(__dirname, '..', 'uploads', 'verification');
+fs.mkdirSync(verifyBase, { recursive: true });
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/verification/');
+    cb(null, verifyBase);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
