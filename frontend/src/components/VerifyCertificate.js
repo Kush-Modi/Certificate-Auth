@@ -373,6 +373,25 @@ const VerifyCertificate = () => {
                 {result.message}
               </Alert>
 
+              {/* Step-by-step status badges */}
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
+                <Chip
+                  label={`Steganography: ${result.verificationDetails?.hasEmbeddedData ? 'Found' : 'Missing'}`}
+                  color={result.verificationDetails?.hasEmbeddedData ? 'success' : 'error'}
+                  variant="outlined"
+                />
+                <Chip
+                  label={`Crypto: ${result.verificationDetails?.signatureVerified ? 'Signature Valid' : 'Signature Invalid'}`}
+                  color={result.verificationDetails?.signatureVerified ? 'success' : 'error'}
+                  variant="outlined"
+                />
+                <Chip
+                  label={`Blockchain: ${result.verificationDetails?.blockchainVerified ? 'Hash Verified' : 'Hash Not Found'}`}
+                  color={result.verificationDetails?.blockchainVerified ? 'success' : 'error'}
+                  variant="outlined"
+                />
+              </Box>
+
               <Divider sx={{ my: 3 }} />
 
               <Typography variant="h6" gutterBottom>
