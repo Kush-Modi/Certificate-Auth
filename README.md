@@ -227,6 +227,64 @@ sequenceDiagram
 
 ---
 
+## 🔎 How Verification Works
+
+```mermaid
+flowchart LR
+  A[Uploaded Certificate File] --> B[Steganography Extraction]
+  B -->|Extract hash + signature + txHash| C[Cryptography Verification]
+  C -->|Verify RSA signature over hash| D[Blockchain Verification]
+  D -->|Fetch tx by txHash and compare data/hash| E{All Valid?}
+  E -->|Yes| F[✅ Certificate Valid]
+  E -->|No| G[❌ Certificate Forged]
+```
+
+---
+
+## 🧪 Testing Instructions
+
+### Backend
+
+```bash
+# 1) Start backend
+cd backend
+npm install
+npm run dev
+
+# 2) Issue certificate
+curl -X POST http://localhost:5000/api/issue/certificate \
+  -F "certificate=@certificates/demo-certificate.pdf" \
+  -F "issuerId=demo-issuer" \
+  -F "issuerName=Demo University" \
+  -F "recipientName=Alice" \
+  -F "certificateType=Degree"
+
+# Response contains: certificateHash, transactionHash, embeddedFilePath
+
+# 3) Verify certificate by file
+curl -X POST http://localhost:5000/api/verify/certificate \
+  -F "certificate=@<path-to-embedded-file>"
+
+# 4) Verify by hash
+curl http://localhost:5000/api/verify/hash/<certificateHash>
+
+# 5) Verify by transaction hash
+curl http://localhost:5000/api/verify/transaction/<transactionHash>
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm start
+# Open http://localhost:3000
+# Issue a certificate, view txn hash, embedded hash, and download secured file.
+# Then verify via the Verify page (Stego → Crypto → Blockchain).
+```
+
+---
+
 ## 🎮 Demo Instructions
 
 ### 🚀 Quick Start

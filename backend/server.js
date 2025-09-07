@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 // Import routes
 const issueRoutes = require('./routes/issue');
@@ -14,6 +15,14 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+
+// Serve uploads and temp directories for downloads in demo
+const uploadsDir = path.join(__dirname, 'uploads');
+const tempDir = path.join(__dirname, 'temp');
+fs.mkdirSync(uploadsDir, { recursive: true });
+fs.mkdirSync(tempDir, { recursive: true });
+app.use('/uploads', express.static(uploadsDir));
+app.use('/temp', express.static(tempDir));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({

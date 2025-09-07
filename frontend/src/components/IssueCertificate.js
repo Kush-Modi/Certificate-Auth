@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { CloudUpload, CheckCircle, Error, Info } from '@mui/icons-material';
 import { issueCertificate, generateKeyPair } from '../utils/api';
+import QRCode from 'qrcode';
 
 const IssueCertificate = () => {
   const [formData, setFormData] = useState({
@@ -32,6 +33,7 @@ const IssueCertificate = () => {
   const [error, setError] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [keyPairGenerated, setKeyPairGenerated] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState('');
 
   const steps = [
     'Generate Key Pair',
@@ -114,6 +116,18 @@ const IssueCertificate = () => {
           message: 'Certificate issued successfully!',
           data: response.data
         });
+        // Build QR content and render
+        const qrContent = JSON.stringify({
+          tx: response.data.transactionHash,
+          hash: response.data.certificateHash,
+          url: response.data.verificationUrl
+        });
+        try {
+          const dataUrl = await QRCode.toDataURL(qrContent, { width: 256 });
+          setQrDataUrl(dataUrl);
+        } catch (e) {
+          // ignore QR failures in demo
+        }
       }
     } catch (err) {
       setError(err.message || 'Failed to issue certificate');
