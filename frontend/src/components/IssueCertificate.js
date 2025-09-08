@@ -34,6 +34,7 @@ const IssueCertificate = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [keyPairGenerated, setKeyPairGenerated] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
+  const [noiseDefense, setNoiseDefense] = useState(true);
 
   const steps = [
     'Generate Key Pair',
@@ -107,6 +108,7 @@ const IssueCertificate = () => {
       formDataToSend.append('recipientName', formData.recipientName);
       formDataToSend.append('certificateType', formData.certificateType);
       formDataToSend.append('description', formData.description);
+      formDataToSend.append('noiseDefense', String(noiseDefense));
 
       const response = await issueCertificate(formDataToSend);
       if (response.success) {
@@ -334,6 +336,16 @@ const IssueCertificate = () => {
                 placeholder="Additional details about the certificate..."
                 sx={{ mb: 3 }}
               />
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                <input
+                  id="noise-defense"
+                  type="checkbox"
+                  checked={noiseDefense}
+                  onChange={(e) => setNoiseDefense(e.target.checked)}
+                />
+                <label htmlFor="noise-defense">Noise Defense Enabled</label>
+              </Box>
 
               <Button
                 variant="contained"

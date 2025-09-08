@@ -285,6 +285,42 @@ npm start
 
 ---
 
+## 🛡️ Noise Defense (Steganography)
+
+The steganography layer supports an optional Noise Defense mode:
+
+```mermaid
+flowchart LR
+  A[Payload Builder] -->|Real entry| B((PNG LSB))
+  A -->|Decoy entries (fake hashes/signatures)| B
+  B --> C[Verifier]
+  C -->|Extracts only real entry| D[Validates Signature + Chain]
+```
+
+- Real signed payload is embedded along with several decoys.
+- Verifier detects and uses only the real entry; decoys are ignored.
+
+Enable via Issue UI toggle: “Noise Defense Enabled”.
+
+---
+
+## ✅ Security Checklist
+
+- Steganography: Hidden payload with optional decoys
+- Cryptography: RSA digital signatures over file hash
+- Blockchain: Combined hash (file + signature) anchored on-chain
+
+All three must pass → certificate is valid.
+
+---
+
+## 🖼️ Demo Screenshots
+
+- Issue Certificate Wizard (with Noise Defense)
+- Verification Page showing Stego → Crypto → Blockchain badges
+
+Add screenshots to `docs/` as you capture them.
+
 ## 🎮 Demo Instructions
 
 ### 🚀 Quick Start

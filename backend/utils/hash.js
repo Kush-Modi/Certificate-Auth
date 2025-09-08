@@ -27,6 +27,18 @@ async function generateHash(filePath) {
 }
 
 /**
+ * Generate combined hash using SHA-256(file) + SHA-256(signature)
+ * @param {string} fileHash - hex string of SHA-256(file)
+ * @param {string} signatureBase64 - signature string
+ * @returns {string} combined hash (hex)
+ */
+function generateCombinedHash(fileHash, signatureBase64) {
+  const signatureHashHex = generateStringHash(Buffer.from(signatureBase64, 'base64'));
+  const combined = `${fileHash}:${signatureHashHex}`;
+  return generateStringHash(combined);
+}
+
+/**
  * Generate SHA-256 hash of a string
  * @param {string} data - String data to hash
  * @returns {string} SHA-256 hash in hexadecimal format

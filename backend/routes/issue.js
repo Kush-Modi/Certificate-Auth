@@ -5,7 +5,7 @@ const fs = require('fs');
 const cryptoService = require('../services/cryptoService');
 const stegoService = require('../services/stegoService');
 const blockchainService = require('../services/blockchainService');
-const { generateHash } = require('../utils/hash');
+const { generateHash, generateCombinedHash } = require('../utils/hash');
 
 const router = express.Router();
 
@@ -43,6 +43,7 @@ const upload = multer({
 router.post('/certificate', upload.single('certificate'), async (req, res) => {
   try {
     const { issuerId, issuerName, recipientName, certificateType } = req.body;
+    const noiseDefense = String(req.body.noiseDefense || 'false') === 'true';
     const certificateFile = req.file;
 
     if (!certificateFile) {
@@ -61,12 +62,13 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
     const certificateHash = await generateHash(certificateFile.path);
     console.log('📋 Certificate hash generated:', certificateHash);
 
-    // Step 2: Create digital signature
+    // Step 2: Create digital signature (sign file hash)
     const signature = await cryptoService.signData(certificateHash, issuerId);
     console.log('🔐 Digital signature created');
 
-    // Step 3: Store hash on blockchain
-    const blockchainResult = await blockchainService.storeHash(certificateHash, issuerId);
+    // Step 3: Store combined hash on blockchain (fileHash + signatureHash)
+    const combinedHash = generateCombinedHash(certificateHash, signature);
+    const blockchainResult = await blockchainService.storeHash(combinedHash, issuerId);
     console.log('⛓️ Hash stored on blockchain:', blockchainResult.transactionHash);
 
     // Step 4: Embed data via steganography (PNG/JPEG) or placeholder for PDF
@@ -74,6 +76,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
       transactionHash: blockchainResult.transactionHash,
       signature: signature,
       certificateHash,
+      combinedHash,
       issuerId: issuerId,
       timestamp: new Date().toISOString()
     };
@@ -83,7 +86,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
     if (isPdf) {
       embeddedFilePath = await stegoService.embedDataInPDF(certificateFile.path, payload);
     } else {
-      embeddedFilePath = await stegoService.embedData(certificateFile.path, payload);
+      embeddedFilePath = await stegoService.embedData(certificateFile.path, payload, { noiseDefense });
     }
     console.log('🕵️ Data embedded via steganography');
 
@@ -91,6 +94,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
     const qrCodeData = {
       transactionHash: blockchainResult.transactionHash,
       certificateHash: certificateHash,
+      combinedHash,
       issuerId: issuerId,
       verificationUrl: `${req.protocol}://${req.get('host')}/api/verify/${certificateHash}`
     };
@@ -102,13 +106,15 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
         certificateHash,
         transactionHash: blockchainResult.transactionHash,
         signature,
+        combinedHash,
         issuerId,
         recipientName,
         certificateType,
         issuedAt: new Date().toISOString(),
         verificationUrl: qrCodeData.verificationUrl,
         qrCodeData,
-        embeddedFilePath
+        embeddedFilePath,
+        noiseDefense
       }
     });
 

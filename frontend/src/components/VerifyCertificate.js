@@ -32,6 +32,12 @@ import {
   Verified
 } from '@mui/icons-material';
 import { verifyCertificate, verifyHash, verifyTransaction } from '../utils/api';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';
 
 const VerifyCertificate = () => {
   const [certificateFile, setCertificateFile] = useState(null);
@@ -41,6 +47,7 @@ const VerifyCertificate = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -490,6 +497,14 @@ const VerifyCertificate = () => {
                 >
                   Issue New Certificate
                 </Button>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() => setDetailsOpen(true)}
+                  fullWidth
+                >
+                  Details
+                </Button>
               </Box>
             </CardContent>
           </Card>
@@ -515,6 +530,32 @@ const VerifyCertificate = () => {
           </CardContent>
         </Card>
       </Paper>
+
+      {/* Details Modal */}
+      <Dialog open={detailsOpen} onClose={() => setDetailsOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Verification Details</DialogTitle>
+        <DialogContent>
+          {result && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Raw Certificate Hash: <span style={{ fontFamily: 'monospace' }}>{result.verificationDetails?.certificateHash}</span>
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Combined Hash (file+sig): <span style={{ fontFamily: 'monospace' }}>{result.verificationDetails?.combinedHash || 'N/A'}</span>
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Transaction Hash: <span style={{ fontFamily: 'monospace' }}>{result.verificationDetails?.transactionHash || 'N/A'}</span>
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Issuer Public Key: <span style={{ fontFamily: 'monospace' }}>{result.signatureDetails?.publicKey || 'Fetch via API'}</span>
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailsOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

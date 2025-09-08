@@ -5,7 +5,7 @@ const fs = require('fs');
 const cryptoService = require('../services/cryptoService');
 const stegoService = require('../services/stegoService');
 const blockchainService = require('../services/blockchainService');
-const { generateHash } = require('../utils/hash');
+const { generateHash, generateCombinedHash } = require('../utils/hash');
 
 const router = express.Router();
 
@@ -71,10 +71,12 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
       });
     }
 
-    // Step 3: Verify blockchain hash
+    // Step 3: Verify blockchain combined hash (file + signature)
+    const signature = embeddedData.signature;
+    const combinedHash = generateCombinedHash(certificateHash, signature);
     const blockchainVerification = await blockchainService.verifyHash(
       embeddedData.transactionHash,
-      certificateHash
+      combinedHash
     );
     console.log('⛓️ Blockchain verification result:', blockchainVerification);
 
@@ -87,7 +89,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
     console.log('🔐 Signature verification result:', signatureVerification);
 
     // Step 5: Determine overall validity
-    const isValid = blockchainVerification.valid && signatureVerification.valid;
+    const isValid = blockchainVerification.valid && signatureVerification.valid && !!embeddedData;
 
     res.json({
       success: true,
@@ -101,6 +103,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
         blockchainVerified: blockchainVerification.valid,
         signatureVerified: signatureVerification.valid,
         hasEmbeddedData: true,
+        combinedHash,
         verificationTimestamp: new Date().toISOString()
       },
       blockchainDetails: blockchainVerification,

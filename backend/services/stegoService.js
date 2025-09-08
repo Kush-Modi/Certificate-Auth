@@ -21,7 +21,7 @@ class StegoService {
    * @param {Object} data - Data to embed
    * @returns {string} Path to the modified image
    */
-  async embedData(imagePath, data) {
+  async embedData(imagePath, data, options = { noiseDefense: false, decoyCount: 5 }) {
     try {
       const imageBuffer = fs.readFileSync(imagePath);
       const image = await loadImage(imageBuffer);
@@ -33,8 +33,31 @@ class StegoService {
       const imageData = ctx.getImageData(0, 0, image.width, image.height);
       const pixels = imageData.data;
 
+      // Prepare payload: support noise defense with decoys
+      let payload;
+      if (options.noiseDefense) {
+        const decoys = [];
+        for (let i = 0; i < (options.decoyCount || 5); i += 1) {
+          decoys.push({
+            type: 'decoy',
+            fakeHash: require('crypto').randomBytes(32).toString('hex'),
+            fakeSignature: require('crypto').randomBytes(32).toString('hex'),
+            fakeIssuer: `decoy-${Math.random().toString(36).slice(2, 8)}`
+          });
+        }
+        payload = {
+          mode: 'noise',
+          entries: [
+            { type: 'real', data },
+            ...decoys
+          ]
+        };
+      } else {
+        payload = { mode: 'plain', data };
+      }
+
       // Convert data to binary string
-      const dataString = JSON.stringify(data);
+      const dataString = JSON.stringify(payload);
       const binaryData = this.stringToBinary(dataString);
       
       // Add length prefix and end marker
@@ -120,9 +143,19 @@ class StegoService {
       const dataBinary = binaryData.slice(32, 32 + dataLength * 8);
       const dataString = this.binaryToString(dataBinary);
 
-      const extractedData = JSON.parse(dataString);
+      const extracted = JSON.parse(dataString);
+      let result = null;
+      if (extracted && extracted.mode === 'noise' && Array.isArray(extracted.entries)) {
+        const real = extracted.entries.find(e => e && e.type === 'real' && e.data);
+        result = real ? real.data : null;
+      } else if (extracted && extracted.mode === 'plain' && extracted.data) {
+        result = extracted.data;
+      } else {
+        result = extracted; // fallback
+      }
+
       console.log('✅ Data extracted successfully from steganography');
-      return extractedData;
+      return result;
     } catch (error) {
       console.error('❌ Error extracting data:', error);
       return null;
