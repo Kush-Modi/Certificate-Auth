@@ -30,6 +30,24 @@
 
 ---
 
+## ⚡ Quick Demo (TL;DR)
+
+```bash
+# Backend (API)
+cd backend
+npm install
+# Set your MUMBAI_RPC_URL and PRIVATE_KEY in backend/.env (see below)
+npm run dev
+
+# Frontend (Web)
+cd ../frontend
+npm install
+npm start
+# Open http://localhost:3000
+```
+
+---
+
 ## 🎯 Problem
 
 <div align="center">
@@ -285,6 +303,22 @@ npm start
 
 ---
 
+## 🔧 Environment Setup (Blockchain)
+
+Create `backend/.env` with:
+
+```env
+MUMBAI_RPC_URL=https://polygon-mumbai.infura.io/v3/<YOUR_KEY>
+PRIVATE_KEY=0x<YOUR_PRIVATE_KEY>
+# Optional
+# SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/<YOUR_KEY>
+# MNEMONIC="word1 word2 ... word12"
+```
+
+If not provided, a simulated on-chain fallback is used for demos.
+
+---
+
 ## 🛡️ Noise Defense (Steganography)
 
 The steganography layer supports an optional Noise Defense mode:
@@ -474,6 +508,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 </div>
 
 ---
+
+## 👥 Contributors
+
+- Kush Modi — GitHub: https://github.com/Kush-Modi — LinkedIn: https://www.linkedin.com/in/kush-modi-647b73372/
 
 <div align="center">
 
