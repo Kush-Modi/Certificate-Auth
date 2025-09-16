@@ -80,12 +80,40 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
     );
     console.log('⛓️ Blockchain verification result:', blockchainVerification);
 
-    // Step 4: Verify digital signature
-    const signatureVerification = await cryptoService.verifySignature(
-      certificateHash,
-      embeddedData.signature,
-      embeddedData.issuerId
-    );
+    // Step 4: Verify digital signature using registry public key if available
+    let signatureVerification;
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const registryPath = path.join(__dirname, '..', 'storage', 'registry.json');
+      let authority = null;
+      if (fs.existsSync(registryPath)) {
+        const list = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+        authority = list.find(a => a.name === embeddedData.issuerId) || null;
+      }
+      if (authority && authority.publicKey) {
+        signatureVerification = await cryptoService.verifySignatureWithPublicKey(
+          certificateHash,
+          embeddedData.signature,
+          authority.publicKey
+        );
+        signatureVerification.authority = { name: authority.name, address: authority.address, source: 'registry' };
+      } else {
+        signatureVerification = await cryptoService.verifySignature(
+          certificateHash,
+          embeddedData.signature,
+          embeddedData.issuerId
+        );
+        signatureVerification.authority = { name: embeddedData.issuerId, source: 'local' };
+      }
+    } catch (e) {
+      signatureVerification = await cryptoService.verifySignature(
+        certificateHash,
+        embeddedData.signature,
+        embeddedData.issuerId
+      );
+      signatureVerification.authority = { name: embeddedData.issuerId, source: 'fallback' };
+    }
     console.log('🔐 Signature verification result:', signatureVerification);
 
     // Step 5: Determine overall validity
@@ -102,6 +130,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
         issuedAt: embeddedData.timestamp,
         blockchainVerified: blockchainVerification.valid,
         signatureVerified: signatureVerification.valid,
+        authority: signatureVerification.authority,
         hasEmbeddedData: true,
         combinedHash,
         verificationTimestamp: new Date().toISOString()

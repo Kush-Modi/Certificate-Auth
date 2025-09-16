@@ -99,6 +99,11 @@ export const getVerificationStats = async () => {
   return apiRequest('/verify/stats');
 };
 
+// Authorities registry
+export const getAuthorities = async () => {
+  return apiRequest('/registry');
+};
+
 // Health Check API
 export const healthCheck = async () => {
   return apiRequest('/health');

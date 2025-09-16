@@ -348,6 +348,27 @@ All three must pass → certificate is valid.
 
 ---
 
+## 🏛️ Multiple Authorities Supported (Simulation)
+
+The system supports issuing by different authorities via a simple registry. Backend exposes `/api/registry` to list authorities and uses the selected authority's public key for verification.
+
+Example:
+
+```bash
+# Issue with University A
+curl -X POST http://localhost:5000/api/issue/certificate \
+  -F "certificate=@certificates/demo-certificate.pdf" \
+  -F "issuerId=demo" \
+  -F "issuerName=Demo" \
+  -F "issuerNameSelected=University A" \
+  -F "recipientName=Alice" \
+  -F "certificateType=Degree"
+
+# Attempt to verify under Org B's key would fail signature check
+```
+
+Use the Issue UI dropdown to pick the authority.
+
 ## 🖼️ Demo Screenshots
 
 - Issue Certificate Wizard (with Noise Defense)

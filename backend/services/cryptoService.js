@@ -162,6 +162,33 @@ class CryptoService {
   }
 
   /**
+   * Verify digital signature with provided public key
+   * @param {string} data - Original data
+   * @param {string} signature - Base64 signature
+   * @param {string} publicKeyPem - PEM public key
+   * @returns {Object} Verification result
+   */
+  async verifySignatureWithPublicKey(data, signature, publicKeyPem) {
+    try {
+      const verify = crypto.createVerify('SHA256');
+      verify.update(data);
+      verify.end();
+      const isValid = verify.verify(publicKeyPem, signature, 'base64');
+      return {
+        valid: isValid,
+        algorithm: 'RSA-SHA256',
+        verifiedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        valid: false,
+        error: error.message,
+        verifiedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
    * List all available issuers
    * @returns {Array} List of issuer information
    */

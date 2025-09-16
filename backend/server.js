@@ -7,6 +7,7 @@ const fs = require('fs');
 // Import routes
 const issueRoutes = require('./routes/issue');
 const verifyRoutes = require('./routes/verify');
+const registryRoutes = require('./routes/registry');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +40,7 @@ const upload = multer({ storage: storage });
 // Routes
 app.use('/api/issue', issueRoutes);
 app.use('/api/verify', verifyRoutes);
+app.use('/api/registry', registryRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

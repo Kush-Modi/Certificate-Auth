@@ -16,7 +16,7 @@ import {
   Chip
 } from '@mui/material';
 import { CloudUpload, CheckCircle, Error, Info } from '@mui/icons-material';
-import { issueCertificate, generateKeyPair } from '../utils/api';
+import { issueCertificate, generateKeyPair, getAuthorities } from '../utils/api';
 import QRCode from 'qrcode';
 
 const IssueCertificate = () => {
@@ -35,6 +35,19 @@ const IssueCertificate = () => {
   const [keyPairGenerated, setKeyPairGenerated] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [noiseDefense, setNoiseDefense] = useState(true);
+  const [authorities, setAuthorities] = useState([]);
+  const [issuerNameSelected, setIssuerNameSelected] = useState('');
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const resp = await getAuthorities();
+        if (resp.success && Array.isArray(resp.authorities)) {
+          setAuthorities(resp.authorities);
+        }
+      } catch (e) {}
+    })();
+  }, []);
 
   const steps = [
     'Generate Key Pair',
@@ -109,6 +122,7 @@ const IssueCertificate = () => {
       formDataToSend.append('certificateType', formData.certificateType);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('noiseDefense', String(noiseDefense));
+      if (issuerNameSelected) formDataToSend.append('issuerNameSelected', issuerNameSelected);
 
       const response = await issueCertificate(formDataToSend);
       if (response.success) {
@@ -324,6 +338,23 @@ const IssueCertificate = () => {
                   required
                 />
               </Box>
+
+              {authorities.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <label htmlFor="issuer-select">Select Issuing Authority</label>
+                  <select
+                    id="issuer-select"
+                    style={{ width: '100%', padding: 12, borderRadius: 8, border: '2px solid #e0e0e0' }}
+                    value={issuerNameSelected}
+                    onChange={(e) => setIssuerNameSelected(e.target.value)}
+                  >
+                    <option value="">-- Choose Authority (optional) --</option>
+                    {authorities.map(a => (
+                      <option key={a.name} value={a.name}>{a.name}</option>
+                    ))}
+                  </select>
+                </Box>
+              )}
 
               <TextField
                 fullWidth

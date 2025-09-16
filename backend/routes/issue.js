@@ -42,7 +42,7 @@ const upload = multer({
 // Issue certificate endpoint
 router.post('/certificate', upload.single('certificate'), async (req, res) => {
   try {
-    const { issuerId, issuerName, recipientName, certificateType } = req.body;
+    const { issuerId, issuerName, recipientName, certificateType, issuerNameSelected } = req.body;
     const noiseDefense = String(req.body.noiseDefense || 'false') === 'true';
     const certificateFile = req.file;
 
@@ -58,12 +58,28 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
       });
     }
 
+    // Step 0: Load selected authority (simulation)
+    const fs = require('fs');
+    const path = require('path');
+    const registryPath = path.join(__dirname, '..', 'storage', 'registry.json');
+    let authority = null;
+    if (issuerNameSelected) {
+      try {
+        const list = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+        authority = list.find(a => a.name === issuerNameSelected) || null;
+      } catch (e) {
+        // ignore, optional
+      }
+    }
+
     // Step 1: Generate hash of the certificate
     const certificateHash = await generateHash(certificateFile.path);
     console.log('📋 Certificate hash generated:', certificateHash);
 
     // Step 2: Create digital signature (sign file hash)
-    const signature = await cryptoService.signData(certificateHash, issuerId);
+    // If authority name is chosen, use its issuerId aliasing
+    const signerId = authority ? authority.name : issuerId;
+    const signature = await cryptoService.signData(certificateHash, signerId);
     console.log('🔐 Digital signature created');
 
     // Step 3: Store combined hash on blockchain (fileHash + signatureHash)
@@ -77,7 +93,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
       signature: signature,
       certificateHash,
       combinedHash,
-      issuerId: issuerId,
+      issuerId: signerId,
       timestamp: new Date().toISOString()
     };
 
@@ -95,7 +111,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
       transactionHash: blockchainResult.transactionHash,
       certificateHash: certificateHash,
       combinedHash,
-      issuerId: issuerId,
+      issuerId: signerId,
       verificationUrl: `${req.protocol}://${req.get('host')}/api/verify/${certificateHash}`
     };
 
@@ -107,7 +123,7 @@ router.post('/certificate', upload.single('certificate'), async (req, res) => {
         transactionHash: blockchainResult.transactionHash,
         signature,
         combinedHash,
-        issuerId,
+        issuerId: signerId,
         recipientName,
         certificateType,
         issuedAt: new Date().toISOString(),

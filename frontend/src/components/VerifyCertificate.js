@@ -424,11 +424,15 @@ const VerifyCertificate = () => {
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="body2" color="text.secondary">Issuer ID:</Typography>
-                    <Typography variant="body2">{result.verificationDetails?.issuerId || 'N/A'}</Typography>
+                    <Typography variant="body2" color="text.secondary">Issuer:</Typography>
+                    <Typography variant="body2">{result.verificationDetails?.authority?.name || result.verificationDetails?.issuerId || 'N/A'}</Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">Authority Status:</Typography>
+                    <Typography variant="body2">{result.verificationDetails?.authority ? (result.verificationDetails.signatureVerified ? 'Valid Authority' : 'Invalid Authority') : 'Unknown'}</Typography>
+                  </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2" color="text.secondary">Verified At:</Typography>
                     <Typography variant="body2">
