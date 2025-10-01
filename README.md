@@ -10,6 +10,8 @@
 
 **A tamper-proof, verifiable digital certificate system combining Blockchain, Cryptography, and Steganography to prevent forgery and ensure authenticity.**
 
+<sub>Hackathon-ready demo • Clean architecture • Realistic flows</sub>
+
 [🚀 Live Demo](https://your-demo-link.com) • [📖 Documentation](https://your-docs-link.com) • [🐛 Report Bug](https://github.com/Kush-Modi/Certificate-Auth/issues) • [✨ Request Feature](https://github.com/Kush-Modi/Certificate-Auth/issues)
 
 </div>
