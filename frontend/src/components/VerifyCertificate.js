@@ -503,6 +503,15 @@ const VerifyCertificate = () => {
                 </Button>
                 <Button
                   variant="outlined"
+                  href="https://github.com/Kush-Modi/Certificate-Auth"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  fullWidth
+                >
+                  View Repo
+                </Button>
+                <Button
+                  variant="outlined"
                   color="secondary"
                   onClick={() => setDetailsOpen(true)}
                   fullWidth
